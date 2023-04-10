@@ -1,19 +1,21 @@
 package com.plexpt.chatgpt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import com.plexpt.chatgpt.entity.chat.Message;
-import com.plexpt.chatgpt.listener.ConsoleStreamListener;
-import com.plexpt.chatgpt.listener.SseStreamListener;
-import com.plexpt.chatgpt.util.Proxys;
+import com.plexpt.chatgpt.listener.StreamListener;
+import com.plexpt.chatgpt.listener.ConsoleListener;
+import com.plexpt.chatgpt.util.ProxyUtil;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.net.Proxy;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -21,13 +23,14 @@ import java.util.concurrent.CountDownLatch;
  *
  * @author plexpt
  */
+@RunWith(SpringJUnit4ClassRunner.class)
 public class StreamTest {
 
     private ChatGPTStream chatGPTStream;
 
     @Before
     public void before() {
-        Proxy proxy = Proxys.http("127.0.0.1", 1080);
+        java.net.Proxy proxy = ProxyUtil.http("127.0.0.1", 1080);
 
         chatGPTStream = ChatGPTStream.builder()
                 .apiKey("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")
@@ -42,12 +45,16 @@ public class StreamTest {
 
     @Test
     public void chatCompletions() {
-        ConsoleStreamListener listener = new ConsoleStreamListener();
         Message message = Message.of("写一段七言绝句诗，题目是：火锅！");
         ChatCompletion chatCompletion = ChatCompletion.builder()
-                .messages(Arrays.asList(message))
+                .messages(Collections.singletonList(message))
                 .build();
-        chatGPTStream.streamChatCompletion(chatCompletion, listener);
+        chatGPTStream.streamChatCompletion(chatCompletion, new StreamListener(new ObjectMapper()) {
+            @Override
+            protected void onComplete(String message) {
+
+            }
+        });
 
         //卡住测试
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -64,13 +71,15 @@ public class StreamTest {
 
         SseEmitter sseEmitter = new SseEmitter(-1L);
 
-        SseStreamListener listener = new SseStreamListener(sseEmitter);
-        Message message = Message.of(prompt);
+        ConsoleListener listener = new ConsoleListener(new ObjectMapper(), sseEmitter) {
 
-        listener.setOnComplate(msg -> {
-            //回答完成，可以做一些事情
-        });
-        chatGPTStream.streamChatCompletion(Arrays.asList(message), listener);
+            @Override
+            protected void onComplete(String message) {
+                System.out.println(message);
+            }
+        };
+        Message message = Message.of(prompt);
+        chatGPTStream.streamChatCompletion(Collections.singletonList(message), listener);
 
 
         return sseEmitter;

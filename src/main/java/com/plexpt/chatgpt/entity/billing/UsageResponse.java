@@ -12,7 +12,7 @@ import lombok.Data;
  * @author plexpt
  */
 @Data
-public class UseageResponse {
+public class UsageResponse {
 
     /**
      * 总使用金额：美元

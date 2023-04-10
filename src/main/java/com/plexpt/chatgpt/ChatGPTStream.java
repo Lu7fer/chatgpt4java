@@ -1,30 +1,22 @@
 package com.plexpt.chatgpt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.plexpt.chatgpt.api.Api;
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import com.plexpt.chatgpt.entity.chat.Message;
-
-import java.net.Proxy;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.http.ContentType;
+import com.plexpt.chatgpt.listener.StreamListener;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.sse.EventSource;
-import okhttp3.sse.EventSourceListener;
-import okhttp3.sse.EventSources;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
+
+import java.net.Proxy;
+import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -42,8 +34,9 @@ public class ChatGPTStream {
 
     private String apiKey;
     private List<String> apiKeyList;
-
-    private OkHttpClient okHttpClient;
+    private Random random = new Random();
+    private RestTemplate restTemplate;
+    private ObjectMapper objectMapper;
     /**
      * 连接超时
      */
@@ -59,21 +52,13 @@ public class ChatGPTStream {
      * 反向代理
      */
     @Builder.Default
-    private String apiHost = Api.DEFAULT_API_HOST;
+    private String apiHost = DEFAULT_API_HOST;
+    public static final String DEFAULT_API_HOST = "https://api.openai.com/";
 
     /**
      * 初始化
      */
     public ChatGPTStream init() {
-        OkHttpClient.Builder client = new OkHttpClient.Builder();
-        client.connectTimeout(timeout, TimeUnit.SECONDS);
-        client.writeTimeout(timeout, TimeUnit.SECONDS);
-        client.readTimeout(timeout, TimeUnit.SECONDS);
-        if (Objects.nonNull(proxy)) {
-            client.proxy(proxy);
-        }
-
-        okHttpClient = client.build();
 
         return this;
     }
@@ -83,30 +68,26 @@ public class ChatGPTStream {
      * 流式输出
      */
     public void streamChatCompletion(ChatCompletion chatCompletion,
-                                     EventSourceListener eventSourceListener) {
+                                     StreamListener streamListener) {
 
         chatCompletion.setStream(true);
-
+        String key;
+        if (apiKeyList != null && !apiKeyList.isEmpty()) {
+            key = apiKeyList.get(random.nextInt(0, apiKeyList.size()));
+        } else {
+            key = apiKey;
+        }
         try {
-            EventSource.Factory factory = EventSources.createFactory(okHttpClient);
-            ObjectMapper mapper = new ObjectMapper();
-            String requestBody = mapper.writeValueAsString(chatCompletion);
-            String key = apiKey;
-            if (apiKeyList != null && !apiKeyList.isEmpty()) {
-                key = RandomUtil.randomEle(apiKeyList);
-            }
 
 
-            Request request = new Request.Builder()
-                    .url(apiHost + "v1/chat/completions")
-                    .post(RequestBody.create(MediaType.parse(ContentType.JSON.getValue()),
-                            requestBody))
-                    .header("Authorization", "Bearer " + key)
-                    .build();
-            factory.newEventSource(request, eventSourceListener);
+            restTemplate.execute(apiHost + "/v1/chat/completions", HttpMethod.POST, request -> {
+                request.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + key);
+                request.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_EVENT_STREAM_VALUE);
+                objectMapper.writeValue(request.getBody(), chatCompletion);
+            }, streamListener);
 
         } catch (Exception e) {
-            log.error("请求出错：{}", e);
+            log.error("请求出错：{}", (Object) e);
         }
     }
 
@@ -114,7 +95,7 @@ public class ChatGPTStream {
      * 流式输出
      */
     public void streamChatCompletion(List<Message> messages,
-                                     EventSourceListener eventSourceListener) {
+                                     StreamListener eventSourceListener) {
         ChatCompletion chatCompletion = ChatCompletion.builder()
                 .messages(messages)
                 .stream(true)

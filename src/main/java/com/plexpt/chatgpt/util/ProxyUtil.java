@@ -7,7 +7,7 @@ import lombok.experimental.UtilityClass;
 
 
 @UtilityClass
-public class Proxys {
+public class ProxyUtil {
 
 
     /**

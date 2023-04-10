@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Message {
     /**
-     * 目前支持三中角色参考官网，进行情景输入：https://platform.openai.com/docs/guides/chat/introduction
+     * 目前支持三种角色参考官网，进行情景输入：<a href="https://platform.openai.com/docs/guides/chat/introduction">Chat completions</a>
      */
     private String role;
     private String content;
@@ -43,7 +43,7 @@ public class Message {
         USER("user"),
         ASSISTANT("assistant"),
         ;
-        private String value;
+        private final String value;
     }
 
 }

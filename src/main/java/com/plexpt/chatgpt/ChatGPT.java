@@ -1,44 +1,23 @@
 package com.plexpt.chatgpt;
 
-import com.alibaba.fastjson.JSON;
-import com.plexpt.chatgpt.api.Api;
-import com.plexpt.chatgpt.entity.BaseResponse;
-import com.plexpt.chatgpt.entity.billing.CreditGrantsResponse;
-import com.plexpt.chatgpt.entity.billing.SubscriptionData;
-import com.plexpt.chatgpt.entity.billing.UseageResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import com.plexpt.chatgpt.entity.chat.ChatCompletionResponse;
 import com.plexpt.chatgpt.entity.chat.Message;
-import com.plexpt.chatgpt.exception.ChatException;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
 import java.net.Proxy;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.http.ContentType;
-import cn.hutool.http.Header;
-import io.reactivex.Single;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+import java.util.Random;
 
 
 /**
@@ -54,19 +33,23 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatGPT {
+
+
     /**
      * keys
      */
     private String apiKey;
 
     private List<String> apiKeyList;
+    private Random random = new Random();
     /**
      * 自定义api host使用builder的方式构造client
      */
     @Builder.Default
-    private String apiHost = Api.DEFAULT_API_HOST;
-    private Api apiClient;
-    private OkHttpClient okHttpClient;
+    private String apiHost = DEFAULT_API_HOST;
+    public static final String DEFAULT_API_HOST = "https://api.openai.com/";
+    private RestTemplate restTemplate;
+    private ObjectMapper objectMapper;
     /**
      * 超时 默认300
      */
@@ -78,61 +61,14 @@ public class ChatGPT {
     @Builder.Default
     private Proxy proxy = Proxy.NO_PROXY;
 
-
-    /**
-     * 初始化
-     */
-    public ChatGPT init() {
-        OkHttpClient.Builder client = new OkHttpClient.Builder();
-        client.addInterceptor(chain -> {
-            Request original = chain.request();
-            String key = apiKey;
-            if (apiKeyList != null && !apiKeyList.isEmpty()) {
-                key = RandomUtil.randomEle(apiKeyList);
-            }
-
-            Request request = original.newBuilder()
-                    .header(Header.AUTHORIZATION.getValue(), "Bearer " + key)
-                    .header(Header.CONTENT_TYPE.getValue(), ContentType.JSON.getValue())
-                    .method(original.method(), original.body())
-                    .build();
-            return chain.proceed(request);
-        }).addInterceptor(chain -> {
-            Request original = chain.request();
-            Response response = chain.proceed(original);
-            if (!response.isSuccessful()) {
-                String errorMsg = response.body().string();
-
-                log.error("请求异常：{}", errorMsg);
-                BaseResponse baseResponse = JSON.parseObject(errorMsg, BaseResponse.class);
-                if (Objects.nonNull(baseResponse.getError())) {
-                    log.error(baseResponse.getError().getMessage());
-                    throw new ChatException(baseResponse.getError().getMessage());
-                }
-                throw new ChatException("error");
-            }
-            return response;
-        });
-
-        client.connectTimeout(timeout, TimeUnit.SECONDS);
-        client.writeTimeout(timeout, TimeUnit.SECONDS);
-        client.readTimeout(timeout, TimeUnit.SECONDS);
-        if (Objects.nonNull(proxy)) {
-            client.proxy(proxy);
+    private String getKey() {
+        String key;
+        if (apiKeyList != null && !apiKeyList.isEmpty()) {
+            key = apiKeyList.get(random.nextInt(0, apiKeyList.size()));
+        } else {
+            key = apiKey;
         }
-        OkHttpClient httpClient = client.build();
-        this.okHttpClient = httpClient;
-
-
-        this.apiClient = new Retrofit.Builder()
-                .baseUrl(this.apiHost)
-                .client(okHttpClient)
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(JacksonConverterFactory.create())
-                .build()
-                .create(Api.class);
-
-        return this;
+        return key;
     }
 
 
@@ -143,9 +79,12 @@ public class ChatGPT {
      * @return 答案
      */
     public ChatCompletionResponse chatCompletion(ChatCompletion chatCompletion) {
-        Single<ChatCompletionResponse> chatCompletionResponse =
-                this.apiClient.chatCompletion(chatCompletion);
-        return chatCompletionResponse.blockingGet();
+        String key = getKey();
+        LinkedMultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + key);
+        HttpEntity<ChatCompletion> requestEntity = new HttpEntity<>(chatCompletion, headers);
+        return restTemplate.exchange(apiHost + "/v1/chat/completions", HttpMethod.POST, requestEntity,
+                ChatCompletionResponse.class).getBody();
     }
 
     /**
@@ -163,55 +102,12 @@ public class ChatGPT {
      */
     public String chat(String message) {
         ChatCompletion chatCompletion = ChatCompletion.builder()
-                .messages(Arrays.asList(Message.of(message)))
+                .messages(List.of(Message.of(message)))
                 .build();
         ChatCompletionResponse response = this.chatCompletion(chatCompletion);
         return response.getChoices().get(0).getMessage().getContent();
     }
 
-    /**
-     * 余额查询
-     *
-     * @return
-     */
-    public CreditGrantsResponse creditGrants() {
-        Single<CreditGrantsResponse> creditGrants = this.apiClient.creditGrants();
-        return creditGrants.blockingGet();
-    }
-
-
-    /**
-     * 余额查询
-     *
-     * @return
-     */
-    public BigDecimal balance() {
-        Single<SubscriptionData> subscription = apiClient.subscription();
-        SubscriptionData subscriptionData = subscription.blockingGet();
-        BigDecimal total = subscriptionData.getHardLimitUsd();
-        DateTime start = DateUtil.offsetDay(new Date(), -90);
-        DateTime end = DateUtil.offsetDay(new Date(), 1);
-
-        Single<UseageResponse> usage = apiClient.usage(formatDate(start), formatDate(end));
-        UseageResponse useageResponse = usage.blockingGet();
-        BigDecimal used = useageResponse.getTotalUsage().divide(BigDecimal.valueOf(100));
-
-        return total.subtract(used);
-    }
-
-    /**
-     * 余额查询
-     *
-     * @return
-     */
-    public static BigDecimal balance(String key) {
-        ChatGPT chatGPT = ChatGPT.builder()
-                .apiKey(key)
-                .build()
-                .init();
-
-        return chatGPT.balance();
-    }
 
     public static String formatDate(Date date) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());

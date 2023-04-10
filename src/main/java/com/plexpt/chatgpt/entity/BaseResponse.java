@@ -15,7 +15,7 @@ public class BaseResponse<T> {
 
 
     @Data
-    public class Error {
+    public static class Error {
         private String message;
         private String type;
         private String param;

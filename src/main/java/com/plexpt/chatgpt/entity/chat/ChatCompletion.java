@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Builder
 @Slf4j
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChatCompletion implements Serializable {
 
@@ -38,6 +38,10 @@ public class ChatCompletion implements Serializable {
      * 使用什么取样温度，0到2之间。越高越奔放。越低越保守。
      * <p>
      * 不要同时改这个和topP
+     * What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output
+     * more random, while lower values like 0.2 will make it more focused and deterministic.
+     * <p>
+     * We generally recommend altering this or top_p but not both.
      */
     @Builder.Default
     private double temperature = 0.9;
@@ -46,6 +50,10 @@ public class ChatCompletion implements Serializable {
      * 0-1
      * 建议0.9
      * 不要同时改这个和temperature
+     * An alternative to sampling with temperature, called nucleus sampling, where the model considers
+     * the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+     * <p>
+     * We generally recommend altering this or temperature but not both.
      */
     @JsonProperty("top_p")
     @Builder.Default
@@ -76,18 +84,23 @@ public class ChatCompletion implements Serializable {
     @JsonProperty("max_tokens")
     private Integer maxTokens;
 
-
+    /**
+     * Number between -2.0 and 2.0. Positive values penalize new tokens based on whether
+     * they appear in the text so far, increasing the model's likelihood to talk about new topics.
+     */
     @JsonProperty("presence_penalty")
     private double presencePenalty;
 
     /**
      * -2.0 ~~ 2.0
+     * Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing
+     * frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
      */
     @JsonProperty("frequency_penalty")
     private double frequencyPenalty;
 
     @JsonProperty("logit_bias")
-    private Map logitBias;
+    private Map<String, Integer> logitBias;
     /**
      * 用户唯一值，确保接口不被重复调用
      */
@@ -97,6 +110,12 @@ public class ChatCompletion implements Serializable {
     @Getter
     @AllArgsConstructor
     public enum Model {
+        /**
+         * */
+        TEXT_ADA_001("text-ada-001"),
+        /**
+         * */
+        TEXT_CURIE_001("text-curie-001"),
         /**
          * gpt-3.5-turbo
          */
@@ -122,7 +141,7 @@ public class ChatCompletion implements Serializable {
          */
         GPT_4_32K_0314("gpt-4-32k-0314"),
         ;
-        private String name;
+        private final String name;
     }
 
 }

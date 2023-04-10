@@ -4,11 +4,10 @@ import com.plexpt.chatgpt.entity.billing.CreditGrantsResponse;
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import com.plexpt.chatgpt.entity.chat.ChatCompletionResponse;
 import com.plexpt.chatgpt.entity.chat.Message;
-import com.plexpt.chatgpt.util.Proxys;
+import com.plexpt.chatgpt.util.ProxyUtil;
 
 import org.junit.Before;
 
-import java.net.Proxy;
 import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,18 +24,15 @@ public class Test {
 
     @Before
     public void before() {
-        Proxy proxy = Proxys.http("127.0.0.1", 1080);
+        java.net.Proxy proxy = ProxyUtil.http("127.0.0.1", 1080);
 
         chatGPT = ChatGPT.builder()
                 .apiKey("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")
                 .timeout(900)
                 .proxy(proxy)
                 .apiHost("https://api.openai.com/") //代理地址
-                .build()
-                .init();
+                .build();
 
-        CreditGrantsResponse response = chatGPT.creditGrants();
-        log.info("余额：{}", response.getTotalAvailable());
     }
 
     @org.junit.Test

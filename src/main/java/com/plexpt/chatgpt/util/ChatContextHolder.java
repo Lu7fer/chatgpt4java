@@ -16,13 +16,8 @@ public class ChatContextHolder {
      * @return
      */
     public static List<Message> get(String id) {
-        List<Message> messages = context.get(id);
-        if (messages == null) {
-            messages = new ArrayList<>();
-            context.put(id, messages);
-        }
 
-        return messages;
+        return context.computeIfAbsent(id, k -> new ArrayList<>());
     }
 
 
@@ -46,11 +41,7 @@ public class ChatContextHolder {
      * @return
      */
     public static void add(String id, Message message) {
-        List<Message> messages = context.get(id);
-        if (messages == null) {
-            messages = new ArrayList<>();
-            context.put(id, messages);
-        }
+        List<Message> messages = context.computeIfAbsent(id, k -> new ArrayList<>());
         messages.add(message);
     }
 
