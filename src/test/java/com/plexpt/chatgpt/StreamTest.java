@@ -4,16 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import com.plexpt.chatgpt.entity.chat.Message;
 import com.plexpt.chatgpt.listener.StreamListener;
-import com.plexpt.chatgpt.listener.ConsoleListener;
 import com.plexpt.chatgpt.util.ProxyUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
@@ -63,26 +58,6 @@ public class StreamTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    @GetMapping("/chat/sse")
-    @CrossOrigin
-    public SseEmitter sseEmitter(String prompt) {
-
-        SseEmitter sseEmitter = new SseEmitter(-1L);
-
-        ConsoleListener listener = new ConsoleListener(new ObjectMapper(), sseEmitter) {
-
-            @Override
-            protected void onComplete(String message) {
-                System.out.println(message);
-            }
-        };
-        Message message = Message.of(prompt);
-        chatGPTStream.streamChatCompletion(Collections.singletonList(message), listener);
-
-
-        return sseEmitter;
     }
 
 }
