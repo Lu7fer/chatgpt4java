@@ -1,5 +1,6 @@
 package cf.vbnm.chatgpt;
 
+import cf.vbnm.chatgpt.client.RestTemplateChatGPT;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletionResponse;
 import cf.vbnm.chatgpt.entity.chat.Message;
@@ -20,13 +21,13 @@ public class TestChatgpt {
         System.out.println("test");
     }
 
-    private ChatGPT chatGPT;
+    private RestTemplateChatGPT chatGPT;
 
     @Before
     public void before() {
 //        java.net.Proxy proxy = ProxyUtil.http("127.0.0.1", 1080);
 
-        chatGPT = new ChatGPT("", new RestTemplate(), new ObjectMapper());
+        chatGPT = new RestTemplateChatGPT("", new RestTemplate(), new ObjectMapper());
 
     }
 

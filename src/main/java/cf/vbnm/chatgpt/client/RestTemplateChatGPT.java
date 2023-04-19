@@ -1,4 +1,4 @@
-package cf.vbnm.chatgpt;
+package cf.vbnm.chatgpt.client;
 
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletionResponse;
@@ -24,7 +24,7 @@ import java.util.*;
  */
 
 @Slf4j
-public class ChatGPT {
+public class RestTemplateChatGPT implements ChatGPT {
     private final String apiKey;
     /**
      * keys
@@ -39,14 +39,14 @@ public class ChatGPT {
     private final ObjectMapper objectMapper;
 
 
-    public ChatGPT(String apiKey, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public RestTemplateChatGPT(String apiKey, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.apiKey = apiKey;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         apiKeyList = null;
     }
 
-    public ChatGPT(List<String> apiKeyList, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public RestTemplateChatGPT(List<String> apiKeyList, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         assert apiKeyList != null && apiKeyList.size() != 0;
@@ -75,6 +75,7 @@ public class ChatGPT {
      * @param chatCompletion 问答参数
      * @return 答案
      */
+    @Override
     public ChatCompletionResponse chatCompletion(ChatCompletion chatCompletion) {
         String key = getKey();
         LinkedMultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
@@ -90,6 +91,7 @@ public class ChatGPT {
      * @param messages 问答参数
      * @return respose
      */
+    @Override
     public ChatCompletionResponse chatCompletion(List<Message> messages) {
         ChatCompletion chatCompletion = ChatCompletion.builder().messages(messages).build();
         return this.chatCompletion(chatCompletion);
@@ -97,9 +99,11 @@ public class ChatGPT {
 
     /**
      * 直接问
+     *
      * @param message ask the message
      * @return gpt's answer
      */
+    @Override
     public String chat(String message) {
         ChatCompletion chatCompletion = ChatCompletion.builder()
                 .messages(Collections.singletonList(Message.of(message)))
@@ -119,11 +123,13 @@ public class ChatGPT {
      * 流式输出
      * 添加自定义header
      * it's a block method
-     * @param chatCompletion question
-     * @param headers custom headers
+     *
+     * @param chatCompletion      question
+     * @param headers             custom headers
      * @param eventSourceListener listener
      * @return answer
      */
+    @Override
     public String streamChatCompletion(ChatCompletion chatCompletion,
                                        StreamListener eventSourceListener, HttpHeaders headers) {
 
@@ -148,10 +154,12 @@ public class ChatGPT {
      * 流式输出
      * 添加自定义header
      * it's a block method
-     * @param chatCompletion question
+     *
+     * @param chatCompletion      question
      * @param eventSourceListener listener
      * @return answer
      */
+    @Override
     public String streamChatCompletion(ChatCompletion chatCompletion,
                                        StreamListener eventSourceListener) {
         return streamChatCompletion(chatCompletion, eventSourceListener, null);
@@ -161,10 +169,12 @@ public class ChatGPT {
      * 流式输出
      * 添加自定义header
      * it's a block method
-     * @param messages more questions
+     *
+     * @param messages            more questions
      * @param eventSourceListener listener
      * @return answer
      */
+    @Override
     public String streamChatCompletion(List<Message> messages,
                                        StreamListener eventSourceListener) {
         ChatCompletion chatCompletion = ChatCompletion.builder()

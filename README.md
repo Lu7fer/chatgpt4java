@@ -74,7 +74,7 @@ implementation "cf.vbnm.chatgpt:ChatGPT4Java:1.0.0-SNAPSHOT"
 也可以使用这个类进行测试 [ConsoleChatGPT](src/test/java/cf/vbnm/chatgpt/StreamTest.java)
 
 ```java
-import cf.vbnm.chatgpt.ChatGPT;
+import cf.vbnm.chatgpt.client.RestTemplateChatGPT;
 import cf.vbnm.chatgpt.EnableChatGPTClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -83,8 +83,8 @@ import org.springframework.stereotype.Component;
 @Component
 class Test { //国内需要代理
     @Autowired
-    private ChatGPT chatGPT;
-    
+    private RestTemplateChatGPT chatGPT;
+
     public void test() {
         String res = chatGPT.chat("写一段七言绝句诗，题目是：火锅！");
         System.out.println(res);
