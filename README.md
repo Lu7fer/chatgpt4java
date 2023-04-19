@@ -52,6 +52,8 @@ maven
         <groupId>cf.vbnm.chatgpt</groupId>
         <artifactId>ChatGPT4Java</artifactId>
         <version>1.0.0-SNAPSHOT</version>
+        <!--如果使用Spring 6.0+, 需要依赖这个版本-->
+        <version>1.0.4-jre17-SNAPSHOT</version>
     </dependency>
 </project>
 ```
