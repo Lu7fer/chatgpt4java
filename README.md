@@ -1,23 +1,17 @@
 <h1 style="text-align: center; color: hotpink; -webkit-animation: rainbow 5s infinite; -moz-animation: rainbow 5s infinite; -o-animation: rainbow 5s infinite; animation: rainbow 5s infinite;">ChatGPT Java API</h1>
 
-![stable](https://img.shields.io/badge/stability-stable-brightgreen.svg)
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.plexpt/chatgpt)](https://maven-badges.herokuapp.com/maven-central/com.github.plexpt/chatgpt)
-
-
 OpenAI ChatGPT 的SDK。觉得不错请右上角Star
 
-感谢 [revChatGPT](https://github.com/acheong08/ChatGPT).
+查询是阻塞的
+
+
+感谢 [PlexPt](https://github.com/PlexPt/).
 
 # 问题表
 
 [共约67万个问题，欢迎拿去炼丹](https://github.com/PlexPt/awesome-chatgpt-prompts-zh/blob/main/question/README.md)
 
 
-
-点击👇🏻传送链接，购买云服务器炼丹：
-
-- [**阿里云服务器**](https://reurl.cc/NqQXyx)
-- [**【腾讯云】云服务器，低至4.2元/月**](https://url.cn/B7m0OYnG)
 
 # 功能特性
 
@@ -38,20 +32,39 @@ OpenAI ChatGPT 的SDK。觉得不错请右上角Star
 
 ## 使用指南
 
-最新版本 [![Maven Central](https://img.shields.io/maven-central/v/com.github.plexpt/chatgpt)](https://maven-badges.herokuapp.com/maven-central/com.github.plexpt/chatgpt)
 
 maven
-```
-<dependency>
-    <groupId>com.github.plexpt</groupId>
-    <artifactId>chatgpt</artifactId>
-    <version>4.0.5</version>
-</dependency>
+```xml
+
+<project>
+    <repositories>
+        <repository>
+            <id>snapshots</id>
+            <name>snapshots</name>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+            <layout>default</layout>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <dependency>
+        <groupId>cf.vbnm.chatgpt</groupId>
+        <artifactId>ChatGPT4Java</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+</project>
 ```
 
 gradle
-```
-implementation group: 'com.github.plexpt', name: 'chatgpt', version: '4.0.5'
+
+```groovy
+repositories {
+    maven {
+        url "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+    }
+}
+implementation "cf.vbnm.chatgpt:ChatGPT4Java:1.0.0-SNAPSHOT"
 ```
 
 
@@ -61,7 +74,8 @@ implementation group: 'com.github.plexpt', name: 'chatgpt', version: '4.0.5'
 也可以使用这个类进行测试 [ConsoleChatGPT](src/test/java/cf/vbnm/chatgpt/StreamTest.java)
 
 ```java
-import cf.vbnm.chatgpt.ChatGPT;import cf.vbnm.chatgpt.EnableChatGPTClient;
+import cf.vbnm.chatgpt.ChatGPT;
+import cf.vbnm.chatgpt.EnableChatGPTClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
