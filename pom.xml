@@ -74,6 +74,7 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -209,8 +210,8 @@
                             <goal>sign</goal>
                         </goals>
                         <configuration>
-<!--                            <keyname></keyname>-->
-<!--                            <passphraseServerId></passphraseServerId>-->
+                            <!--                            <keyname></keyname>-->
+                            <!--                            <passphraseServerId></passphraseServerId>-->
                         </configuration>
                     </execution>
                 </executions>
