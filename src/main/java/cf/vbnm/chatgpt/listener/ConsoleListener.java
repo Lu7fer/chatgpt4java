@@ -17,14 +17,12 @@ public class ConsoleListener extends StreamListener {
 
     @Override
     protected void onComplete(String message) {
-        System.err.println("onComplete");
-        System.err.println(message);
     }
 
 
     @Override
     public void onMsg(String message) {
-//        System.out.print(message);
+        System.out.print(message);
     }
 
     @Override

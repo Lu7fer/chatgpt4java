@@ -88,6 +88,7 @@ public class ChatGPT {
      * 简易版
      *
      * @param messages 问答参数
+     * @return respose
      */
     public ChatCompletionResponse chatCompletion(List<Message> messages) {
         ChatCompletion chatCompletion = ChatCompletion.builder().messages(messages).build();
@@ -96,6 +97,8 @@ public class ChatGPT {
 
     /**
      * 直接问
+     * @param message ask the message
+     * @return gpt's answer
      */
     public String chat(String message) {
         ChatCompletion chatCompletion = ChatCompletion.builder()
@@ -115,6 +118,11 @@ public class ChatGPT {
     /**
      * 流式输出
      * 添加自定义header
+     * it's a block method
+     * @param chatCompletion question
+     * @param headers custom headers
+     * @param eventSourceListener listener
+     * @return answer
      */
     public String streamChatCompletion(ChatCompletion chatCompletion,
                                        StreamListener eventSourceListener, HttpHeaders headers) {
@@ -138,6 +146,11 @@ public class ChatGPT {
 
     /**
      * 流式输出
+     * 添加自定义header
+     * it's a block method
+     * @param chatCompletion question
+     * @param eventSourceListener listener
+     * @return answer
      */
     public String streamChatCompletion(ChatCompletion chatCompletion,
                                        StreamListener eventSourceListener) {
@@ -146,6 +159,11 @@ public class ChatGPT {
 
     /**
      * 流式输出
+     * 添加自定义header
+     * it's a block method
+     * @param messages more questions
+     * @param eventSourceListener listener
+     * @return answer
      */
     public String streamChatCompletion(List<Message> messages,
                                        StreamListener eventSourceListener) {
