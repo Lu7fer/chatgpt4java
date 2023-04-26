@@ -15,8 +15,10 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChatCompletion implements Serializable {
 
+    @JsonProperty("model")
     private String model = Model.GPT_3_5_TURBO.getName();
 
+    @JsonProperty("messages")
     private List<ChatMessage> chatMessages;
     /**
      * 使用什么取样温度，0到2之间。越高越奔放。越低越保守。

@@ -52,7 +52,7 @@ maven
         <artifactId>ChatGPT4Java</artifactId>
         <version>1.0.6-SNAPSHOT</version>
         <!--如果使用Spring 6.0+, 需要依赖这个版本-->
-        <version>1.1.0-jre17-SNAPSHOT</version>
+        <version>1.1.1-jre17-SNAPSHOT</version>
     </dependency>
 </project>
 ```
