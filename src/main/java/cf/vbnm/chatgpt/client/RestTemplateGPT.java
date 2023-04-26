@@ -2,19 +2,21 @@ package cf.vbnm.chatgpt.client;
 
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletionResponse;
-import cf.vbnm.chatgpt.entity.chat.Message;
+import cf.vbnm.chatgpt.entity.chat.ChatMessage;
+import cf.vbnm.chatgpt.entity.image.ImageReq;
+import cf.vbnm.chatgpt.entity.image.ImageResp;
+import cf.vbnm.chatgpt.entity.image.ImageSize;
 import cf.vbnm.chatgpt.listener.StreamListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Supplier;
 
 
 /**
@@ -22,31 +24,33 @@ import java.util.*;
  *
  * @author plexpt
  */
-
-@Slf4j
-public class RestTemplateChatGPT implements ChatGPT {
+public class RestTemplateGPT implements ChatGPT {
+    private static final Logger log = LoggerFactory.getLogger(RestTemplateGPT.class);
     private final String apiKey;
     /**
      * keys
      */
     private final List<String> apiKeyList;
+
+    private Supplier<String> keySupplier;
+
     private final Random random = new Random();
     /**
-     * 自定义api host使用builder的方式构造client
+     * 自定义api host
      */
     private String apiHost;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
 
-    public RestTemplateChatGPT(String apiKey, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public RestTemplateGPT(String apiKey, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.apiKey = apiKey;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         apiKeyList = null;
     }
 
-    public RestTemplateChatGPT(List<String> apiKeyList, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public RestTemplateGPT(List<String> apiKeyList, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         assert apiKeyList != null && apiKeyList.size() != 0;
@@ -60,14 +64,38 @@ public class RestTemplateChatGPT implements ChatGPT {
 
     private String getKey() {
         String key;
+        if (keySupplier != null) {
+            String s = keySupplier.get();
+            if (s != null)
+                return s;
+        }
         if (apiKeyList != null && !apiKeyList.isEmpty()) {
             key = apiKeyList.get(random.nextInt(apiKeyList.size()));
         } else {
             key = apiKey;
         }
+        log.debug("selected key: {}", key);
         return key;
     }
 
+    public void setKeySupplier(Supplier<String> keySupplier) {
+        this.keySupplier = keySupplier;
+    }
+
+    public ImageResp generationImages(String prompt, int n, ImageSize size, String responseFormat, String user) {
+        if (!("url".equals(responseFormat) || "b64_json".equals(responseFormat))) {
+            throw new IllegalArgumentException("response_format only support 'url' or 'b64_json'");
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(getKey());
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ImageReq> entity = new HttpEntity<>(new ImageReq(prompt, n, size, responseFormat, user), headers);
+        return restTemplate.exchange(apiHost + "/v1/images/generations", HttpMethod.POST, entity, ImageResp.class).getBody();
+    }
+
+    public ImageResp generationImage(String prompt) {
+        return generationImages(prompt, 1, ImageSize.SIZE_512, "url", null);
+    }
 
     /**
      * 最新版的GPT-3.5 chat completion 更加贴近官方网站的问答模型
@@ -78,8 +106,8 @@ public class RestTemplateChatGPT implements ChatGPT {
     @Override
     public ChatCompletionResponse chatCompletion(ChatCompletion chatCompletion) {
         String key = getKey();
-        LinkedMultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + key);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(key);
         HttpEntity<ChatCompletion> requestEntity = new HttpEntity<>(chatCompletion, headers);
         return restTemplate.exchange(apiHost + "/v1/chat/completions", HttpMethod.POST, requestEntity,
                 ChatCompletionResponse.class).getBody();
@@ -88,12 +116,12 @@ public class RestTemplateChatGPT implements ChatGPT {
     /**
      * 简易版
      *
-     * @param messages 问答参数
+     * @param chatMessages 问答参数
      * @return respose
      */
     @Override
-    public ChatCompletionResponse chatCompletion(List<Message> messages) {
-        ChatCompletion chatCompletion = ChatCompletion.builder().messages(messages).build();
+    public ChatCompletionResponse chatCompletion(List<ChatMessage> chatMessages) {
+        ChatCompletion chatCompletion = new ChatCompletion().chatMessages(chatMessages);
         return this.chatCompletion(chatCompletion);
     }
 
@@ -105,11 +133,9 @@ public class RestTemplateChatGPT implements ChatGPT {
      */
     @Override
     public String chat(String message) {
-        ChatCompletion chatCompletion = ChatCompletion.builder()
-                .messages(Collections.singletonList(Message.of(message)))
-                .build();
+        ChatCompletion chatCompletion = new ChatCompletion().chatMessages(Collections.singletonList(ChatMessage.of(message)));
         ChatCompletionResponse response = this.chatCompletion(chatCompletion);
-        return response.getChoices().get(0).getMessage().getContent();
+        return response.getChoices().get(0).getChatMessage().getContent();
     }
 
 
@@ -133,13 +159,8 @@ public class RestTemplateChatGPT implements ChatGPT {
     public String streamChatCompletion(ChatCompletion chatCompletion,
                                        StreamListener eventSourceListener, HttpHeaders headers) {
 
-        chatCompletion.setStream(true);
-        String key;
-        if (apiKeyList != null && !apiKeyList.isEmpty()) {
-            key = apiKeyList.get(random.nextInt(apiKeyList.size()));
-        } else {
-            key = apiKey;
-        }
+        chatCompletion.stream(true);
+        String key = getKey();
         return restTemplate.execute(apiHost + "/v1/chat/completions", HttpMethod.POST, request -> {
             request.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + key);
             request.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -170,17 +191,16 @@ public class RestTemplateChatGPT implements ChatGPT {
      * 添加自定义header
      * it's a block method
      *
-     * @param messages            more questions
+     * @param chatMessages        more questions
      * @param eventSourceListener listener
      * @return answer
      */
     @Override
-    public String streamChatCompletion(List<Message> messages,
+    public String streamChatCompletion(List<ChatMessage> chatMessages,
                                        StreamListener eventSourceListener) {
-        ChatCompletion chatCompletion = ChatCompletion.builder()
-                .messages(messages)
-                .stream(true)
-                .build();
+        ChatCompletion chatCompletion = new ChatCompletion()
+                .chatMessages(chatMessages)
+                .stream(true);
         return streamChatCompletion(chatCompletion, eventSourceListener);
     }
 }

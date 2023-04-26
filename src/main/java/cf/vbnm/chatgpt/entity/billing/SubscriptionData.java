@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
-import lombok.Data;
-
-@Data
+/**
+ * @author Yttrium
+ */
 public class SubscriptionData {
 
     /**
@@ -15,4 +15,12 @@ public class SubscriptionData {
      */
     @JsonProperty("hard_limit_usd")
     private BigDecimal hardLimitUsd;
+
+    public BigDecimal getHardLimitUsd() {
+        return hardLimitUsd;
+    }
+
+    public void setHardLimitUsd(BigDecimal hardLimitUsd) {
+        this.hardLimitUsd = hardLimitUsd;
+    }
 }

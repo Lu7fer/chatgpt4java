@@ -4,14 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
-import lombok.Data;
-
 /**
  * 余额查询接口返回值
  *
  * @author plexpt
+ * @author Yttrium
  */
-@Data
 public class UsageResponse {
 
     /**
@@ -20,4 +18,11 @@ public class UsageResponse {
     @JsonProperty("total_usage")
     private BigDecimal totalUsage;
 
+    public BigDecimal getTotalUsage() {
+        return totalUsage;
+    }
+
+    public void setTotalUsage(BigDecimal totalUsage) {
+        this.totalUsage = totalUsage;
+    }
 }

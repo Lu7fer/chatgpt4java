@@ -24,10 +24,9 @@ OpenAI ChatGPT 的SDK。觉得不错请右上角Star
 |    阻塞式对话    |  支持  |
 |     前端      |  无   |
 |     上下文     |  支持  |
-|   计算Token   | 即将支持 |
 |   多KEY轮询    |  支持  |
 |     代理      |  支持  |
-|    反向代理     |  支持  |
+|    图像生成     |  支持  |
 
 
 ## 使用指南
@@ -51,9 +50,9 @@ maven
     <dependency>
         <groupId>cf.vbnm.chatgpt</groupId>
         <artifactId>ChatGPT4Java</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.6-SNAPSHOT</version>
         <!--如果使用Spring 6.0+, 需要依赖这个版本-->
-        <version>1.0.4-jre17-SNAPSHOT</version>
+        <version>1.1.0-jre17-SNAPSHOT</version>
     </dependency>
 </project>
 ```
@@ -66,7 +65,7 @@ repositories {
         url "https://s01.oss.sonatype.org/content/repositories/snapshots/"
     }
 }
-implementation "cf.vbnm.chatgpt:ChatGPT4Java:1.0.0-SNAPSHOT"
+implementation "cf.vbnm.chatgpt:ChatGPT4Java:1.0.6-jre17-SNAPSHOT"
 ```
 
 
@@ -76,7 +75,7 @@ implementation "cf.vbnm.chatgpt:ChatGPT4Java:1.0.0-SNAPSHOT"
 也可以使用这个类进行测试 [ConsoleChatGPT](src/test/java/cf/vbnm/chatgpt/StreamTest.java)
 
 ```java
-import cf.vbnm.chatgpt.client.RestTemplateChatGPT;
+import cf.vbnm.chatgpt.client.RestTemplateGPT;
 import cf.vbnm.chatgpt.EnableChatGPTClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -85,7 +84,7 @@ import org.springframework.stereotype.Component;
 @Component
 class Test { //国内需要代理
     @Autowired
-    private RestTemplateChatGPT chatGPT;
+    private RestTemplateGPT chatGPT;
 
     public void test() {
         String res = chatGPT.chat("写一段七言绝句诗，题目是：火锅！");
@@ -104,11 +103,11 @@ class Test { //国内需要代理
     private ChatGPT chatGPT;
     
     Message system = Message.ofSystem("你现在是一个诗人，专门写七言绝句");
-    Message message = Message.of("写一段七言绝句诗，题目是：火锅！");
+    Message chatMessage = Message.of("写一段七言绝句诗，题目是：火锅！");
     
     ChatCompletion chatCompletion = ChatCompletion.builder()
             .model(ChatCompletion.Model.GPT_3_5_TURBO.getName())
-            .messages(Arrays.asList(system, message))
+            .chatMessages(Arrays.asList(system, chatMessage))
             .maxTokens(3000)
             .temperature(0.9)
             .build();
@@ -127,9 +126,9 @@ class Test { //国内需要代理
     
             
     ConsoleStreamListener listener = new ConsoleStreamListener();
-    Message message = Message.of("写一段七言绝句诗，题目是：火锅！");
+    Message chatMessage = Message.of("写一段七言绝句诗，题目是：火锅！");
     ChatCompletion chatCompletion = ChatCompletion.builder()
-        .messages(Arrays.asList(message))
+        .chatMessages(Arrays.asList(chatMessage))
         .build();
     chatGPTStream.streamChatCompletion(chatCompletion, listener);
 

@@ -1,6 +1,6 @@
 package cf.vbnm.chatgpt.util;
 
-import cf.vbnm.chatgpt.entity.chat.Message;
+import cf.vbnm.chatgpt.entity.chat.ChatMessage;
 
 import java.util.*;
 
@@ -9,7 +9,7 @@ import java.util.*;
  */
 public class ChatContextHolder {
 
-    private static final Map<String, List<Message>> context = new HashMap<>();
+    private static final Map<String, List<ChatMessage>> context = new HashMap<>();
 
 
     /**
@@ -18,7 +18,7 @@ public class ChatContextHolder {
      * @param id 对话id
      * @return 消息集合
      */
-    public static List<Message> get(String id) {
+    public static List<ChatMessage> get(String id) {
 
         return context.computeIfAbsent(id, k -> new ArrayList<>());
     }
@@ -32,20 +32,20 @@ public class ChatContextHolder {
      */
     public static void add(String id, String msg) {
 
-        Message message = Message.builder().content(msg).build();
-        add(id, message);
+        ChatMessage chatMessage = ChatMessage.of(msg);
+        add(id, chatMessage);
     }
 
 
     /**
      * 添加对话
      *
-     * @param id      对话id
-     * @param message 对话内容
+     * @param id          对话id
+     * @param chatMessage 对话内容
      */
-    public static void add(String id, Message message) {
-        List<Message> messages = context.computeIfAbsent(id, k -> new ArrayList<>());
-        messages.add(message);
+    public static void add(String id, ChatMessage chatMessage) {
+        List<ChatMessage> chatMessages = context.computeIfAbsent(id, k -> new ArrayList<>());
+        chatMessages.add(chatMessage);
     }
 
     /**

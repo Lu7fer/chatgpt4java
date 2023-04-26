@@ -3,12 +3,10 @@ package cf.vbnm.chatgpt.util;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 
-import lombok.experimental.UtilityClass;
 
-
-@UtilityClass
 public class ProxyUtil {
-
+    private ProxyUtil() {
+    }
 
     /**
      * http 代理

@@ -7,33 +7,17 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * chat
  *
  * @author plexpt
  */
-@Data
-@Builder
-@Slf4j
-@AllArgsConstructor
-@NoArgsConstructor(force = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChatCompletion implements Serializable {
 
-    @NonNull
-    @Builder.Default
     private String model = Model.GPT_3_5_TURBO.getName();
 
-    @NonNull
-    private List<Message> messages;
+    private List<ChatMessage> chatMessages;
     /**
      * 使用什么取样温度，0到2之间。越高越奔放。越低越保守。
      * <p>
@@ -43,7 +27,6 @@ public class ChatCompletion implements Serializable {
      * <p>
      * We generally recommend altering this or top_p but not both.
      */
-    @Builder.Default
     private double temperature = 0.9;
 
     /**
@@ -56,14 +39,12 @@ public class ChatCompletion implements Serializable {
      * We generally recommend altering this or temperature but not both.
      */
     @JsonProperty("top_p")
-    @Builder.Default
     private double topP = 0.9;
 
 
     /**
      * 结果数。
      */
-    @Builder.Default
     private Integer n = 1;
 
 
@@ -71,7 +52,6 @@ public class ChatCompletion implements Serializable {
      * 是否流式输出.
      * default:false
      */
-    @Builder.Default
     private boolean stream = false;
     /**
      * 停用词
@@ -106,15 +86,122 @@ public class ChatCompletion implements Serializable {
      */
     private String user;
 
+    public String getModel() {
+        return model;
+    }
 
-    @Getter
-    @AllArgsConstructor
+    public List<ChatMessage> getChatMessages() {
+        return chatMessages;
+    }
+
+    public double getTemperature() {
+        return temperature;
+    }
+
+    public double getTopP() {
+        return topP;
+    }
+
+    public Integer getN() {
+        return n;
+    }
+
+    public boolean isStream() {
+        return stream;
+    }
+
+    public List<String> getStop() {
+        return stop;
+    }
+
+    public Integer getMaxTokens() {
+        return maxTokens;
+    }
+
+    public double getPresencePenalty() {
+        return presencePenalty;
+    }
+
+    public double getFrequencyPenalty() {
+        return frequencyPenalty;
+    }
+
+    public Map<String, Integer> getLogitBias() {
+        return logitBias;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public ChatCompletion model(String model) {
+        this.model = model;
+        return this;
+    }
+
+    public ChatCompletion chatMessages(List<ChatMessage> chatMessages) {
+        this.chatMessages = chatMessages;
+        return this;
+    }
+
+    public ChatCompletion temperature(double temperature) {
+        this.temperature = temperature;
+        return this;
+    }
+
+    public ChatCompletion topP(double topP) {
+        this.topP = topP;
+        return this;
+    }
+
+    public ChatCompletion n(Integer n) {
+        this.n = n;
+        return this;
+    }
+
+    public ChatCompletion stream(boolean stream) {
+        this.stream = stream;
+        return this;
+    }
+
+    public ChatCompletion stop(List<String> stop) {
+        this.stop = stop;
+        return this;
+    }
+
+    public ChatCompletion maxTokens(Integer maxTokens) {
+        this.maxTokens = maxTokens;
+        return this;
+    }
+
+    public ChatCompletion presencePenalty(double presencePenalty) {
+        this.presencePenalty = presencePenalty;
+        return this;
+    }
+
+    public ChatCompletion frequencyPenalty(double frequencyPenalty) {
+        this.frequencyPenalty = frequencyPenalty;
+        return this;
+    }
+
+    public ChatCompletion logitBias(Map<String, Integer> logitBias) {
+        this.logitBias = logitBias;
+        return this;
+    }
+
+    public ChatCompletion user(String user) {
+        this.user = user;
+        return this;
+    }
+
     public enum Model {
         /**
-         * */
+         *
+         */
         TEXT_ADA_001("text-ada-001"),
         /**
-         * */
+         *
+         */
         TEXT_CURIE_001("text-curie-001"),
         /**
          * gpt-3.5-turbo
@@ -128,20 +215,21 @@ public class ChatCompletion implements Serializable {
          * GPT4.0
          */
         GPT_4("gpt-4"),
-        /**
-         * 临时模型，不建议使用
-         */
-        GPT_4_0314("gpt-4-0314"),
+
         /**
          * GPT4.0 超长上下文
          */
         GPT_4_32K("gpt-4-32k"),
-        /**
-         * 临时模型，不建议使用
-         */
-        GPT_4_32K_0314("gpt-4-32k-0314"),
         ;
         private final String name;
+
+        Model(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
 }

@@ -1,8 +1,8 @@
 package cf.vbnm.chatgpt;
 
-import cf.vbnm.chatgpt.client.RestTemplateChatGPT;
+import cf.vbnm.chatgpt.client.RestTemplateGPT;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
-import cf.vbnm.chatgpt.entity.chat.Message;
+import cf.vbnm.chatgpt.entity.chat.ChatMessage;
 import cf.vbnm.chatgpt.listener.ConsoleListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,22 +28,21 @@ public class StreamTest {
 
     }
 
-    private RestTemplateChatGPT chatGPTStream;
+    private RestTemplateGPT chatGPTStream;
 
 
     @Before
     public void before() {
         AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(ChatGPTSupport.class, InnerConfig.class);
-        chatGPTStream = annotationConfigApplicationContext.getBean(RestTemplateChatGPT.class);
+        chatGPTStream = annotationConfigApplicationContext.getBean(RestTemplateGPT.class);
     }
 
 
     @Test
     public void chatCompletions() throws JsonProcessingException {
-        Message message = Message.of("写首诗，题目是好热");
-        ChatCompletion chatCompletion = ChatCompletion.builder()
-                .messages(Collections.singletonList(message))
-                .build();
+        ChatMessage chatMessage = ChatMessage.of("写首诗，题目是好热");
+        ChatCompletion chatCompletion =new ChatCompletion()
+                .chatMessages(Collections.singletonList(chatMessage));
         System.out.println(new ObjectMapper().writeValueAsString(chatCompletion));
         chatGPTStream.streamChatCompletion(chatCompletion, new ConsoleListener(new ObjectMapper()));
 

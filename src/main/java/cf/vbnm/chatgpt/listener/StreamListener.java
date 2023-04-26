@@ -4,9 +4,9 @@ import cf.vbnm.chatgpt.entity.chat.ChatChoice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletionResponse;
-import cf.vbnm.chatgpt.entity.chat.Message;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import cf.vbnm.chatgpt.entity.chat.ChatMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.ResponseExtractor;
 
@@ -23,8 +23,8 @@ import java.util.List;
  *
  * @author plexpt
  */
-@Slf4j
 public abstract class StreamListener implements ResponseExtractor<String> {
+    private final Logger log = LoggerFactory.getLogger(StreamListener.class);
     private final ObjectMapper objectMapper;
 
     public StreamListener(ObjectMapper objectMapper) {
@@ -77,7 +77,7 @@ public abstract class StreamListener implements ResponseExtractor<String> {
         if (choices == null || choices.isEmpty()) {
             return;
         }
-        Message delta = choices.get(0).getDelta();
+        ChatMessage delta = choices.get(0).getDelta();
         String text = delta.getContent();
         if (text != null) {
             lastMessage.append(text);
@@ -120,7 +120,6 @@ public abstract class StreamListener implements ResponseExtractor<String> {
         return lastMessage.toString();
     }
 
-    @SneakyThrows
     public void onFailure(String response) {
 
         if (response == null) {

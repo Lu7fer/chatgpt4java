@@ -2,12 +2,10 @@ package cf.vbnm.chatgpt.entity.billing;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.Data;
-
 /**
  * @author plexpt
+ * @author Yttrium
  */
-@Data
 public class Usage {
     @JsonProperty("prompt_tokens")
     private long promptTokens;
@@ -15,4 +13,28 @@ public class Usage {
     private long completionTokens;
     @JsonProperty("total_tokens")
     private long totalTokens;
+
+    public long getPromptTokens() {
+        return promptTokens;
+    }
+
+    public void setPromptTokens(long promptTokens) {
+        this.promptTokens = promptTokens;
+    }
+
+    public long getCompletionTokens() {
+        return completionTokens;
+    }
+
+    public void setCompletionTokens(long completionTokens) {
+        this.completionTokens = completionTokens;
+    }
+
+    public long getTotalTokens() {
+        return totalTokens;
+    }
+
+    public void setTotalTokens(long totalTokens) {
+        this.totalTokens = totalTokens;
+    }
 }

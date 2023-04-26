@@ -4,14 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
-import lombok.Data;
-
 /**
  * 余额查询接口返回值
  *
  * @author plexpt
+ * @author Yttrium
  */
-@Data
 public class CreditGrantsResponse {
     private String object;
     /**
@@ -33,4 +31,44 @@ public class CreditGrantsResponse {
      * 余额明细
      */
     private Grants grants;
+
+    public String getObject() {
+        return object;
+    }
+
+    public void setObject(String object) {
+        this.object = object;
+    }
+
+    public BigDecimal getTotalGranted() {
+        return totalGranted;
+    }
+
+    public void setTotalGranted(BigDecimal totalGranted) {
+        this.totalGranted = totalGranted;
+    }
+
+    public BigDecimal getTotalUsed() {
+        return totalUsed;
+    }
+
+    public void setTotalUsed(BigDecimal totalUsed) {
+        this.totalUsed = totalUsed;
+    }
+
+    public BigDecimal getTotalAvailable() {
+        return totalAvailable;
+    }
+
+    public void setTotalAvailable(BigDecimal totalAvailable) {
+        this.totalAvailable = totalAvailable;
+    }
+
+    public Grants getGrants() {
+        return grants;
+    }
+
+    public void setGrants(Grants grants) {
+        this.grants = grants;
+    }
 }

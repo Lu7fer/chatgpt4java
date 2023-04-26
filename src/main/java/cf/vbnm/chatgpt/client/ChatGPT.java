@@ -2,7 +2,7 @@ package cf.vbnm.chatgpt.client;
 
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletionResponse;
-import cf.vbnm.chatgpt.entity.chat.Message;
+import cf.vbnm.chatgpt.entity.chat.ChatMessage;
 import cf.vbnm.chatgpt.listener.StreamListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import java.util.List;
 public interface ChatGPT {
     ChatCompletionResponse chatCompletion(ChatCompletion chatCompletion);
 
-    ChatCompletionResponse chatCompletion(List<Message> messages);
+    ChatCompletionResponse chatCompletion(List<ChatMessage> chatMessages);
 
     String chat(String message);
 
@@ -22,5 +22,5 @@ public interface ChatGPT {
 
     String streamChatCompletion(ChatCompletion chatCompletion, StreamListener eventSourceListener);
 
-    String streamChatCompletion(List<Message> messages, StreamListener eventSourceListener);
+    String streamChatCompletion(List<ChatMessage> chatMessages, StreamListener eventSourceListener);
 }
