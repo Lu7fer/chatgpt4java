@@ -11,6 +11,9 @@ public class ChatMessage {
     private String role;
     private String content;
 
+    public ChatMessage() {
+    }
+
     public ChatMessage(String role, String content) {
         this.role = role;
         this.content = content;
@@ -25,6 +28,11 @@ public class ChatMessage {
     }
 
     public static ChatMessage of(String content) {
+
+        return new ChatMessage(ChatMessage.Role.USER.getValue(), content);
+    }
+
+    public static ChatMessage ofUser(String content) {
 
         return new ChatMessage(ChatMessage.Role.USER.getValue(), content);
     }
@@ -54,6 +62,18 @@ public class ChatMessage {
         public String getValue() {
             return value;
         }
+
+        @Override
+        public String toString() {
+            return "Role='" + value + '\'';
+        }
     }
 
+    @Override
+    public String toString() {
+        return "ChatMsg{" +
+                "role='" + role + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }
