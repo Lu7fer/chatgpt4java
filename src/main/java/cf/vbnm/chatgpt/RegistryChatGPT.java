@@ -1,6 +1,6 @@
 package cf.vbnm.chatgpt;
 
-import cf.vbnm.chatgpt.client.RestTemplateGPT;
+import cf.vbnm.chatgpt.client.RestTemplateGPTClient;
 import cf.vbnm.chatgpt.util.ProxyUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeansException;
@@ -56,19 +56,19 @@ public class RegistryChatGPT implements BeanFactoryPostProcessor {
         }
         if (keySupplier.equals(EnableChatGPTClient.NoSupply.class)) {
             if (keys.size() > 1) {
-                RestTemplateGPT chatGPT = new RestTemplateGPT(keys, restTemplate, objectMapper);
+                RestTemplateGPTClient chatGPT = new RestTemplateGPTClient(keys, restTemplate, objectMapper);
                 chatGPT.setApiHost(apiHost);
                 beanFactory.registerSingleton("chatGPT", chatGPT);
                 return;
             } else if (keys.size() == 1) {
-                RestTemplateGPT chatGPT = new RestTemplateGPT(keys.get(0), restTemplate, objectMapper);
+                RestTemplateGPTClient chatGPT = new RestTemplateGPTClient(keys.get(0), restTemplate, objectMapper);
                 chatGPT.setApiHost(apiHost);
                 beanFactory.registerSingleton("chatGPT", chatGPT);
                 return;
             }
             throw new RuntimeException("Must have at least 1 key");
         } else {
-            RestTemplateGPT chatGPT = new RestTemplateGPT(keys, restTemplate, objectMapper);
+            RestTemplateGPTClient chatGPT = new RestTemplateGPTClient(keys, restTemplate, objectMapper);
             chatGPT.setApiHost(apiHost);
             try {
                 Constructor<? extends Supplier<String>> constructor = keySupplier.getConstructor();

@@ -1,6 +1,6 @@
 package cf.vbnm.chatgpt;
 
-import cf.vbnm.chatgpt.client.RestTemplateGPT;
+import cf.vbnm.chatgpt.client.RestTemplateGPTClient;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatMessage;
 import cf.vbnm.chatgpt.listener.ConsoleListener;
@@ -28,13 +28,13 @@ public class StreamTest {
 
     }
 
-    private RestTemplateGPT chatGPTStream;
+    private RestTemplateGPTClient chatGPTStream;
 
 
     @Before
     public void before() {
         AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(ChatGPTSupport.class, InnerConfig.class);
-        chatGPTStream = annotationConfigApplicationContext.getBean(RestTemplateGPT.class);
+        chatGPTStream = annotationConfigApplicationContext.getBean(RestTemplateGPTClient.class);
     }
 
 

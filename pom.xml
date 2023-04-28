@@ -5,7 +5,7 @@
 
     <groupId>cf.vbnm.chatgpt</groupId>
     <artifactId>ChatGPT4Java</artifactId>
-    <version>1.1.4-jre${java.version}-SNAPSHOT</version>
+    <version>1.1.5-jre${java.version}-SNAPSHOT</version>
     <name>ChatGPT4Java</name>
     <description>ChatGPT4.0、 ChatGPT Java SDK.</description>
     <url>https://vbnm.cf</url>

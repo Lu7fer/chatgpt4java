@@ -4,35 +4,31 @@ OpenAI ChatGPT 的SDK。觉得不错请右上角Star
 
 查询是阻塞的
 
-
 感谢 [PlexPt](https://github.com/PlexPt/).
 
 # 问题表
 
 [共约67万个问题，欢迎拿去炼丹](https://github.com/PlexPt/awesome-chatgpt-prompts-zh/blob/main/question/README.md)
 
-
-
 # 功能特性
 
-|     功能      |  特性  |
-|:-----------:|:----:|
-|   GPT 3.5   |  支持  |
-|   GPT 4.0   |  支持  |
-| GPT 4.0-32k |  支持  |
-|    流式对话     |  支持  |
-|    阻塞式对话    |  支持  |
-|     前端      |  无   |
-|     上下文     |  支持  |
-|   多KEY轮询    |  支持  |
-|     代理      |  支持  |
-|    图像生成     |  支持  |
-
+|     功能      | 特性 |
+|:-----------:|:--:|
+|   GPT 3.5   | 支持 |
+|   GPT 4.0   | 支持 |
+| GPT 4.0-32k | 支持 |
+|    流式对话     | 支持 |
+|    阻塞式对话    | 支持 |
+|     前端      | 无  |
+|     上下文     | 支持 |
+|   多KEY轮询    | 支持 |
+|     代理      | 支持 |
+|    图像生成     | 支持 |
 
 ## 使用指南
 
-
 maven
+
 ```xml
 
 <project>
@@ -52,7 +48,7 @@ maven
         <artifactId>ChatGPT4Java</artifactId>
         <version>1.0.6-SNAPSHOT</version>
         <!--如果使用Spring 6.0+, 需要依赖这个版本-->
-        <version>1.1.1-jre17-SNAPSHOT</version>
+        <version>1.1.5-jre17-SNAPSHOT</version>
     </dependency>
 </project>
 ```
@@ -65,17 +61,15 @@ repositories {
         url "https://s01.oss.sonatype.org/content/repositories/snapshots/"
     }
 }
-implementation "cf.vbnm.chatgpt:ChatGPT4Java:1.0.6-jre17-SNAPSHOT"
+implementation "cf.vbnm.chatgpt:ChatGPT4Java:1.1.5-jre17-SNAPSHOT"
 ```
-
-
 
 ### 最简使用
 
 也可以使用这个类进行测试 [ConsoleChatGPT](src/test/java/cf/vbnm/chatgpt/StreamTest.java)
 
 ```java
-import cf.vbnm.chatgpt.client.RestTemplateGPT;
+import cf.vbnm.chatgpt.client.RestTemplateGPTClient;
 import cf.vbnm.chatgpt.EnableChatGPTClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -84,7 +78,7 @@ import org.springframework.stereotype.Component;
 @Component
 class Test { //国内需要代理
     @Autowired
-    private RestTemplateGPT chatGPT;
+    private RestTemplateGPTClient chatGPT;
 
     public void test() {
         String res = chatGPT.chat("写一段七言绝句诗，题目是：火锅！");
@@ -94,26 +88,25 @@ class Test { //国内需要代理
 
 ```
 
-
 ### 进阶使用
 
 ```java
         //国内需要代理 国外不需要
-    @Autowired
-    private ChatGPT chatGPT;
-    
-    Message system = Message.ofSystem("你现在是一个诗人，专门写七言绝句");
-    Message chatMessage = Message.of("写一段七言绝句诗，题目是：火锅！");
-    
-    ChatCompletion chatCompletion = ChatCompletion.builder()
-            .model(ChatCompletion.Model.GPT_3_5_TURBO.getName())
-            .chatMessages(Arrays.asList(system, chatMessage))
-            .maxTokens(3000)
-            .temperature(0.9)
-            .build();
-    ChatCompletionResponse response = chatGPT.chatCompletion(chatCompletion);
-    Message res = response.getChoices().get(0).getMessage();
-    System.out.println(res);
+@Autowired
+private ChatGPT chatGPT;
+
+        Message system=Message.ofSystem("你现在是一个诗人，专门写七言绝句");
+        Message chatMessage=Message.of("写一段七言绝句诗，题目是：火锅！");
+
+        ChatCompletion chatCompletion=ChatCompletion.builder()
+        .model(ChatCompletion.Model.GPT_3_5_TURBO.getName())
+        .chatMessages(Arrays.asList(system,chatMessage))
+        .maxTokens(3000)
+        .temperature(0.9)
+        .build();
+        ChatCompletionResponse response=chatGPT.chatCompletion(chatCompletion);
+        Message res=response.getChoices().get(0).getMessage();
+        System.out.println(res);
 
 ```
 
@@ -121,16 +114,16 @@ class Test { //国内需要代理
 
 ```java
     @Autowired
-    private ChatGPT chatGPT;
-    ChatGPT chatGPTStream;
-    
-            
-    ConsoleStreamListener listener = new ConsoleStreamListener();
-    Message chatMessage = Message.of("写一段七言绝句诗，题目是：火锅！");
-    ChatCompletion chatCompletion = ChatCompletion.builder()
+private ChatGPT chatGPT;
+        ChatGPT chatGPTStream;
+
+
+        ConsoleStreamListener listener=new ConsoleStreamListener();
+        Message chatMessage=Message.of("写一段七言绝句诗，题目是：火锅！");
+        ChatCompletion chatCompletion=ChatCompletion.builder()
         .chatMessages(Arrays.asList(chatMessage))
         .build();
-    chatGPTStream.streamChatCompletion(chatCompletion, listener);
+        chatGPTStream.streamChatCompletion(chatCompletion,listener);
 
 ```
 
@@ -140,33 +133,31 @@ class Test { //国内需要代理
 
 ```java
 import cf.vbnm.chatgpt.EnableChatGPTClient;
+
 @EnableChatGPTClient(keys = {"key1", "key2", "..."})
 ```
 
 ## 上下文
 
-参考  [ChatContextHolder.java](src/main/java/cf/vbnm/chatgpt/util/ChatContextHolder.java) 
-
-
+参考  [ChatContextHolder.java](src/main/java/cf/vbnm/chatgpt/util/ChatContextHolder.java)
 
 # 常见问题
 
-|                                           问                                            |                                       答                                       |
-|:--------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------:|
-|                                        KEY从哪来？                                         | 手动注册生成：ai.com(需要海外手机号)、或者成品独享帐号：[购买](https://fk.fq.mk/?code=YT0xJmI9Mg%3D%3D) |
-|                                        哪些地区不能用                                         |            **以下国家IP不支持使用：中国(包含港澳台) 俄罗斯 乌克兰 阿富汗 白俄罗斯 委内瑞拉 伊朗 埃及!!**            |
-|                                         有封号风险吗                                         |                               充值的没有。你免费白嫖不封你封谁。                               |
-|                                    我是尊贵的Plus会员，能用吗                                     |                             能用，照封不误。PLUS调用API没啥区别                             |
-|                                       GPT4.0 怎么用                                       |                   申请 https://openai.com/waitlist/gpt-4-api                    |
-|                                 api.openai.com ping不通？                                 |                               禁ping，用curl测试连通性                                |
-|                                         显示超时？                                          |                                   IP不好，换个IP                                   |
-|           显示`Your access was terminated due to violation of our policies`...           |                                   你号没了，下一个                                    |
-| 显示`That model is currently overloaded with other requests. You can retry your request` |                                 模型过载，官方炸了，重试                                  |
-|                                       生成的图片不能用？                                        |                                 图片是它瞎编的，洗洗睡吧                                  |
-|                                         如何充值？                                          |                                 用国外信用卡，国内的不行                                  |
-|                                       返回http 401                                       |                                 API 密钥写错了/没写                                  |
-|                                       返回http 429                                       |                              请求超速了，或者官方超载了。充钱可解决                              |
-|                                       返回http 500                                       |                                     服务器炸了                                     |
-|                                                                                        |                                                                               |
+|                                           问                                            |                            答                            |
+|:--------------------------------------------------------------------------------------:|:-------------------------------------------------------:|
+|                                        哪些地区不能用                                         | **以下国家IP不支持使用：中国(包含港澳台) 俄罗斯 乌克兰 阿富汗 白俄罗斯 委内瑞拉 伊朗 埃及!!** |
+|                                         有封号风险吗                                         |                    充值的没有。你免费白嫖不封你封谁。                    |
+|                                    我是尊贵的Plus会员，能用吗                                     |                  能用，照封不误。PLUS调用API没啥区别                  |
+|                                       GPT4.0 怎么用                                       |        申请 https://openai.com/waitlist/gpt-4-api         |
+|                                 api.openai.com ping不通？                                 |                    禁ping，用curl测试连通性                     |
+|                                         显示超时？                                          |                        IP不好，换个IP                        |
+|           显示`Your access was terminated due to violation of our policies`...           |                        你号没了，下一个                         |
+| 显示`That model is currently overloaded with other requests. You can retry your request` |                      模型过载，官方炸了，重试                       |
+|                                       生成的图片不能用？                                        |                      图片是它瞎编的，洗洗睡吧                       |
+|                                         如何充值？                                          |                      用国外信用卡，国内的不行                       |
+|                                       返回http 401                                       |                      API 密钥写错了/没写                       |
+|                                       返回http 429                                       |                   请求超速了，或者官方超载了。充钱可解决                   |
+|                                       返回http 500                                       |                          服务器炸了                          |
+|                                                                                        |                                                         |
 
 ---

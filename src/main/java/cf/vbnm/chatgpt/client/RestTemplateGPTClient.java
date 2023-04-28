@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
@@ -24,8 +23,8 @@ import java.util.function.Supplier;
  *
  * @author plexpt
  */
-public class RestTemplateGPT implements ChatGPT {
-    private static final Logger log = LoggerFactory.getLogger(RestTemplateGPT.class);
+public class RestTemplateGPTClient implements ChatGPTClient {
+    private static final Logger log = LoggerFactory.getLogger(RestTemplateGPTClient.class);
     private final String apiKey;
     /**
      * keys
@@ -43,14 +42,14 @@ public class RestTemplateGPT implements ChatGPT {
     private final ObjectMapper objectMapper;
 
 
-    public RestTemplateGPT(String apiKey, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public RestTemplateGPTClient(String apiKey, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.apiKey = apiKey;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         apiKeyList = null;
     }
 
-    public RestTemplateGPT(List<String> apiKeyList, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public RestTemplateGPTClient(List<String> apiKeyList, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         assert apiKeyList != null && apiKeyList.size() != 0;
