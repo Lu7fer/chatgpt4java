@@ -6,13 +6,16 @@ import java.util.List;
 
 public class ImageResp {
     @JsonProperty("created")
-    private final int created;
+    private int created;
     @JsonProperty("data")
-    private final List<Data> data;
+    private List<Data> data;
 
     public ImageResp(int created, List<Data> data) {
         this.created = created;
         this.data = data;
+    }
+
+    public ImageResp() {
     }
 
     public int getCreated() {
@@ -27,7 +30,7 @@ public class ImageResp {
         @JsonProperty("url")
         private final String url;
 
-        public Data(String url) {
+        public Data(@JsonProperty("url") String url) {
             this.url = url;
         }
 

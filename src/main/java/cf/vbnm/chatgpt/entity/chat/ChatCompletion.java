@@ -88,6 +88,28 @@ public class ChatCompletion implements Serializable {
      */
     private String user;
 
+    public ChatCompletion() {
+    }
+
+    public ChatCompletion(String model, List<ChatMessage> chatMessages,
+                          double temperature, double topP, Integer n,
+                          boolean stream, List<String> stop, Integer maxTokens,
+                          double presencePenalty, double frequencyPenalty,
+                          Map<String, Integer> logitBias, String user) {
+        this.model = model;
+        this.chatMessages = chatMessages;
+        this.temperature = temperature;
+        this.topP = topP;
+        this.n = n;
+        this.stream = stream;
+        this.stop = stop;
+        this.maxTokens = maxTokens;
+        this.presencePenalty = presencePenalty;
+        this.frequencyPenalty = frequencyPenalty;
+        this.logitBias = logitBias;
+        this.user = user;
+    }
+
     public String getModel() {
         return model;
     }

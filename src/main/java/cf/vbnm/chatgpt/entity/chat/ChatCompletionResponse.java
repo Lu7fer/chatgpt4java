@@ -17,6 +17,19 @@ public class ChatCompletionResponse {
     private List<ChatChoice> choices;
     private Usage usage;
 
+    public ChatCompletionResponse() {
+    }
+
+    public ChatCompletionResponse(String id, String object, long created,
+                                  String model, List<ChatChoice> choices, Usage usage) {
+        this.id = id;
+        this.object = object;
+        this.created = created;
+        this.model = model;
+        this.choices = choices;
+        this.usage = usage;
+    }
+
     public void setId(String id) {
         this.id = id;
     }

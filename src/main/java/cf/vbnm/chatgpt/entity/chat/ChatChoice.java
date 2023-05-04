@@ -20,6 +20,16 @@ public class ChatChoice {
     @JsonProperty("finish_reason")
     private String finishReason;
 
+    public ChatChoice() {
+    }
+
+    public ChatChoice(long index, ChatMessage delta, ChatMessage chatMessage, String finishReason) {
+        this.index = index;
+        this.delta = delta;
+        this.chatMessage = chatMessage;
+        this.finishReason = finishReason;
+    }
+
     public long getIndex() {
         return index;
     }
