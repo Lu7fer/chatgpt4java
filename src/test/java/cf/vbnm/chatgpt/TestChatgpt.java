@@ -4,10 +4,8 @@ import cf.vbnm.chatgpt.client.RestTemplateGPTClient;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletionResponse;
 import cf.vbnm.chatgpt.entity.chat.ChatMessage;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 
@@ -27,7 +25,7 @@ public class TestChatgpt {
     public void before() {
 //        java.net.Proxy proxy = ProxyUtil.http("127.0.0.1", 1080);
 
-        chatGPT = new RestTemplateGPTClient("", new RestTemplate(), new ObjectMapper());
+//        chatGPT = new RestTemplateGPTClient("", new RestTemplate(), new ObjectMapper());
 
     }
 

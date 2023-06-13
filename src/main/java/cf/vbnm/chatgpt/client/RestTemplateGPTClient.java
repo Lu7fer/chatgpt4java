@@ -7,15 +7,17 @@ import cf.vbnm.chatgpt.entity.image.ImageReq;
 import cf.vbnm.chatgpt.entity.image.ImageResp;
 import cf.vbnm.chatgpt.entity.image.ImageSize;
 import cf.vbnm.chatgpt.listener.StreamListener;
+import cf.vbnm.chatgpt.spi.GeneralSupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Supplier;
 
 
 /**
@@ -25,71 +27,73 @@ import java.util.function.Supplier;
  */
 public class RestTemplateGPTClient implements ChatGPTClient {
     private static final Logger log = LoggerFactory.getLogger(RestTemplateGPTClient.class);
-    private final String apiKey;
-    /**
-     * keys
-     */
-    private final List<String> apiKeyList;
 
-    private Supplier<String> keySupplier;
-
+    private List<String> completionPath;
+    private List<String> imagePath;
+    private List<HttpHeaders> headers;
+    private GeneralSupport generalSupport;
     private final Random random = new Random();
-    /**
-     * 自定义api host
-     */
-    private String apiHost;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-
-    public RestTemplateGPTClient(String apiKey, RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.apiKey = apiKey;
+    public RestTemplateGPTClient(List<String> completionPath, List<String> imagePath, List<HttpHeaders> headers,
+                                 RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.completionPath = completionPath;
+        this.imagePath = imagePath;
+        this.headers = headers;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        apiKeyList = null;
+        log.info("Created a RestTemplateGPTClient.");
     }
 
-    public RestTemplateGPTClient(List<String> apiKeyList, RestTemplate restTemplate, ObjectMapper objectMapper) {
+    public RestTemplateGPTClient(GeneralSupport generalSupport, RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.generalSupport = generalSupport;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        assert apiKeyList != null && apiKeyList.size() != 0;
-        this.apiKeyList = apiKeyList;
-        apiKey = null;
+        log.info("Created a RestTemplateGPTClient.");
     }
 
-    public void setApiHost(String apiHost) {
-        this.apiHost = apiHost;
+    public static class Request {
+        public String completionPath;
+        public String imagePath;
+        public HttpHeaders headers;
     }
 
-    private String getKey() {
-        String key;
-        if (keySupplier != null) {
-            String s = keySupplier.get();
-            if (s != null)
-                return s;
+    public Request getRequestInfo() {
+        Request request = new Request();
+        HttpHeaders headers = new HttpHeaders();
+        request.headers = headers;
+        if (generalSupport == null) {
+            int i = 0;
+            if (headers.size() != 1) {
+                i = random.nextInt(headers.size());
+            }
+            request.completionPath = completionPath.get(i);
+            request.imagePath = imagePath.get(i);
+            headers.addAll(this.headers.get(i));
+            return request;
         }
-        if (apiKeyList != null && !apiKeyList.isEmpty()) {
-            key = apiKeyList.get(random.nextInt(apiKeyList.size()));
-        } else {
-            key = apiKey;
+        if (generalSupport.isGetAllArgsAtOnce()) {
+            GeneralSupport.Args args = generalSupport.getAllArgsAtOnce();
+            request.completionPath = args.getCompletionPath();
+            request.imagePath = args.getGenerateImagePath();
+            headers.addAll(args.getHeaders());
+            return request;
         }
-        log.debug("selected key: {}", key);
-        return key;
+        request.completionPath = generalSupport.completionPath();
+        request.imagePath = generalSupport.generateImagePath();
+        headers.addAll(generalSupport.headers());
+        return request;
     }
 
-    public void setKeySupplier(Supplier<String> keySupplier) {
-        this.keySupplier = keySupplier;
-    }
 
     public ImageResp generationImages(String prompt, int n, ImageSize size, String responseFormat, String user) {
         if (!("url".equals(responseFormat) || "b64_json".equals(responseFormat))) {
             throw new IllegalArgumentException("response_format only support 'url' or 'b64_json'");
         }
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(getKey());
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<ImageReq> entity = new HttpEntity<>(new ImageReq(prompt, n, size, responseFormat, user), headers);
-        return restTemplate.exchange(apiHost + "/v1/images/generations", HttpMethod.POST, entity, ImageResp.class).getBody();
+        Request request = getRequestInfo();
+        HttpEntity<ImageReq> entity = new HttpEntity<>(new ImageReq(prompt, n, size, responseFormat, user), request.headers);
+        return restTemplate.exchange(request.imagePath, HttpMethod.POST, entity, ImageResp.class).getBody();
     }
 
     public ImageResp generationImage(String prompt) {
@@ -104,12 +108,9 @@ public class RestTemplateGPTClient implements ChatGPTClient {
      */
     @Override
     public ChatCompletionResponse chatCompletion(ChatCompletion chatCompletion) {
-        String key = getKey();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(key);
-        HttpEntity<ChatCompletion> requestEntity = new HttpEntity<>(chatCompletion, headers);
-        return restTemplate.exchange(apiHost + "/v1/chat/completions", HttpMethod.POST, requestEntity,
-                ChatCompletionResponse.class).getBody();
+        Request request = getRequestInfo();
+        HttpEntity<ChatCompletion> requestEntity = new HttpEntity<>(chatCompletion, request.headers);
+        return restTemplate.exchange(request.completionPath, HttpMethod.POST, requestEntity, ChatCompletionResponse.class).getBody();
     }
 
     /**
@@ -155,17 +156,12 @@ public class RestTemplateGPTClient implements ChatGPTClient {
      * @return answer
      */
     @Override
-    public String streamChatCompletion(ChatCompletion chatCompletion,
-                                       StreamListener eventSourceListener, HttpHeaders headers) {
+    public String streamChatCompletion(ChatCompletion chatCompletion, StreamListener eventSourceListener, HttpHeaders headers) {
 
         chatCompletion.stream(true);
-        String key = getKey();
-        return restTemplate.execute(apiHost + "/v1/chat/completions", HttpMethod.POST, request -> {
-            request.getHeaders().add(HttpHeaders.AUTHORIZATION, "Bearer " + key);
-            request.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-            if (headers != null) {
-                request.getHeaders().addAll(headers);
-            }
+        Request req = getRequestInfo();
+        return restTemplate.execute(req.completionPath, HttpMethod.POST, request -> {
+            request.getHeaders().addAll(req.headers);
             objectMapper.writeValue(request.getBody(), chatCompletion);
         }, eventSourceListener);
     }
@@ -180,8 +176,7 @@ public class RestTemplateGPTClient implements ChatGPTClient {
      * @return answer
      */
     @Override
-    public String streamChatCompletion(ChatCompletion chatCompletion,
-                                       StreamListener eventSourceListener) {
+    public String streamChatCompletion(ChatCompletion chatCompletion, StreamListener eventSourceListener) {
         return streamChatCompletion(chatCompletion, eventSourceListener, null);
     }
 
@@ -195,11 +190,8 @@ public class RestTemplateGPTClient implements ChatGPTClient {
      * @return answer
      */
     @Override
-    public String streamChatCompletion(List<ChatMessage> chatMessages,
-                                       StreamListener eventSourceListener) {
-        ChatCompletion chatCompletion = new ChatCompletion()
-                .chatMessages(chatMessages)
-                .stream(true);
+    public String streamChatCompletion(List<ChatMessage> chatMessages, StreamListener eventSourceListener) {
+        ChatCompletion chatCompletion = new ChatCompletion().chatMessages(chatMessages).stream(true);
         return streamChatCompletion(chatCompletion, eventSourceListener);
     }
 }

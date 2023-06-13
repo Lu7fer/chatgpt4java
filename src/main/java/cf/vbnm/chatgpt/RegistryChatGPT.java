@@ -1,22 +1,24 @@
 package cf.vbnm.chatgpt;
 
+import cf.vbnm.chatgpt.client.ChatGPTClient;
 import cf.vbnm.chatgpt.client.RestTemplateGPTClient;
-import cf.vbnm.chatgpt.util.ProxyUtil;
+import cf.vbnm.chatgpt.spi.GeneralSupport;
+import cf.vbnm.chatgpt.spi.LiteralArgs;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 
 public class RegistryChatGPT implements BeanFactoryPostProcessor {
@@ -33,53 +35,46 @@ public class RegistryChatGPT implements BeanFactoryPostProcessor {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(annotation.connectTimeoutMillis());
         requestFactory.setReadTimeout(annotation.readTimeoutMillis());
+        // set proxy for RequestFactory
+        if (annotation.proxyType() != Proxy.Type.DIRECT) {
+            InetSocketAddress socketAddress = InetSocketAddress.createUnresolved(annotation.proxyHost(), annotation.proxyPort());
+            requestFactory.setProxy(new Proxy(annotation.proxyType(), socketAddress));
+        }
         RestTemplate restTemplate = new RestTemplate(requestFactory);
         ObjectMapper objectMapper = beanFactory.getBean(ObjectMapper.class);
-        Class<? extends Supplier<String>> keySupplier = annotation.keySupplier();
-        Proxy.Type proxyType = annotation.proxyType();
-        String proxyHost = annotation.proxyHost();
-        int proxyPort = annotation.proxyPort();
-        List<String> keys = Arrays.asList(annotation.keys());
-        String host = annotation.host();
-        if (host.endsWith("/")) {
-            host = host.substring(0, host.length() - 1);
-        }
-        String apiHost = host;
-        if (!proxyType.equals(Proxy.Type.DIRECT)) {
-            switch (proxyType) {
-                case HTTP:
-                    requestFactory.setProxy(ProxyUtil.http(proxyHost, proxyPort));
-                    break;
-                case SOCKS:
-                    requestFactory.setProxy(ProxyUtil.socks5(proxyHost, proxyPort));
-            }
-        }
-        if (keySupplier.equals(EnableChatGPTClient.NoSupply.class)) {
-            if (keys.size() > 1) {
-                RestTemplateGPTClient chatGPT = new RestTemplateGPTClient(keys, restTemplate, objectMapper);
-                chatGPT.setApiHost(apiHost);
-                beanFactory.registerSingleton("chatGPT", chatGPT);
-                return;
-            } else if (keys.size() == 1) {
-                RestTemplateGPTClient chatGPT = new RestTemplateGPTClient(keys.get(0), restTemplate, objectMapper);
-                chatGPT.setApiHost(apiHost);
-                beanFactory.registerSingleton("chatGPT", chatGPT);
-                return;
-            }
-            throw new RuntimeException("Must have at least 1 key");
-        } else {
-            RestTemplateGPTClient chatGPT = new RestTemplateGPTClient(keys, restTemplate, objectMapper);
-            chatGPT.setApiHost(apiHost);
+
+        if (annotation.generalSupport() != GeneralSupport.NotSupport.class) {
+            Class<? extends GeneralSupport> generalSupport = annotation.generalSupport();
             try {
-                Constructor<? extends Supplier<String>> constructor = keySupplier.getConstructor();
-                Supplier<String> supplier = constructor.newInstance();
-                chatGPT.setKeySupplier(supplier);
-            } catch (NoSuchMethodException | IllegalAccessException e) {
-                throw new RuntimeException("Only public no args constructor supported", e);
-            } catch (InstantiationException | InvocationTargetException e) {
-                throw new RuntimeException(e);
+                Constructor<? extends GeneralSupport> constructor = generalSupport.getConstructor();
+                if (constructor.isAccessible()) {
+                    ChatGPTClient chatGPT = new RestTemplateGPTClient(constructor.newInstance(), restTemplate, objectMapper);
+                    beanFactory.registerSingleton("chatGPTClient", chatGPT);
+                }
+            } catch (Throwable e) {
+                throw new RuntimeException("Instance class failed, is this class have a public no argument constructor.", e);
             }
-            beanFactory.registerSingleton("chatGPT", chatGPT);
+        } else {
+            LiteralArgs[] args = annotation.value();
+            if (args.length == 0) {
+                throw new IllegalArgumentException("@EnableChatGPTClient is not configured properly.");
+            }
+            List<String> chatPath = new ArrayList<>(), imagePath = new ArrayList<>();
+            List<HttpHeaders> headers = new ArrayList<>();
+            for (LiteralArgs arg : args) {
+                chatPath.add(arg.completionPath());
+                imagePath.add(arg.generateImagePath());
+                HttpHeaders httpHeaders = new HttpHeaders();
+                headers.add(httpHeaders);
+                if (arg.headerName().length != arg.headerValue().length) {
+                    throw new IllegalArgumentException("Header names and header values not match.");
+                }
+                for (int i = 0; i < arg.headerName().length; i++) {
+                    httpHeaders.add(arg.headerName()[i], arg.headerValue()[i]);
+                }
+            }
+            ChatGPTClient chatGPT = new RestTemplateGPTClient(chatPath, imagePath, headers, restTemplate, objectMapper);
+            beanFactory.registerSingleton("chatGPTClient", chatGPT);
         }
 
     }
