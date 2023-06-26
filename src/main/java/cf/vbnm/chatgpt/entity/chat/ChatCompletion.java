@@ -223,6 +223,9 @@ public class ChatCompletion implements Serializable {
          *
          */
         TEXT_ADA_001("text-ada-001"),
+        TEXT_DAVINCI_003("text-davinci-003"),
+        TEXT_DAVINCI_002("text-davinci-002"),
+        CODE_DAVINCI_002("code-davinci-002"),
         /**
          *
          */
@@ -231,19 +234,23 @@ public class ChatCompletion implements Serializable {
          * gpt-3.5-turbo
          */
         GPT_3_5_TURBO("gpt-3.5-turbo"),
+        GPT_3_5_TURBO_16K("gpt-3.5-turbo-16k"),
         /**
          * 临时模型，不建议使用
          */
-        GPT_3_5_TURBO_0301("gpt-3.5-turbo-0301"),
+        GPT_3_5_TURBO_0613("gpt-3.5-turbo-0613"),
+        GPT_3_5_TURBO_16K_0613("gpt-3.5-turbo-16k-0613"),
         /**
          * GPT4.0
          */
         GPT_4("gpt-4"),
+        GPT_4_0613("gpt-4-0613"),
 
         /**
          * GPT4.0 超长上下文
          */
         GPT_4_32K("gpt-4-32k"),
+        GPT_4_32K_0613("gpt-4-32k-0613"),
         ;
         private final String name;
 

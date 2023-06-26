@@ -1,11 +1,13 @@
 package cf.vbnm.chatgpt;
 
+import cf.vbnm.chatgpt.client.ChatGPTClient;
 import cf.vbnm.chatgpt.client.RestTemplateGPTClient;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletionResponse;
 import cf.vbnm.chatgpt.entity.chat.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.Arrays;
 
@@ -19,13 +21,12 @@ public class TestChatgpt {
         System.out.println("test");
     }
 
-    private RestTemplateGPTClient chatGPT;
+    private ChatGPTClient chatGPT;
 
     @Before
     public void before() {
-//        java.net.Proxy proxy = ProxyUtil.http("127.0.0.1", 1080);
-
-//        chatGPT = new RestTemplateGPTClient("", new RestTemplate(), new ObjectMapper());
+        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(StreamTest.InnerConfig.class);
+        chatGPT = annotationConfigApplicationContext.getBean(ChatGPTClient.class);
 
     }
 

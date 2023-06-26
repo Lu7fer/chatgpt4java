@@ -1,10 +1,11 @@
 package cf.vbnm.chatgpt;
 
-import cf.vbnm.chatgpt.client.RestTemplateGPTClient;
+import cf.vbnm.chatgpt.client.ChatGPTClient;
 import cf.vbnm.chatgpt.entity.chat.ChatCompletion;
 import cf.vbnm.chatgpt.entity.chat.ChatMessage;
 import cf.vbnm.chatgpt.listener.ConsoleListener;
 import cf.vbnm.chatgpt.spi.GeneralSupport;
+import cf.vbnm.chatgpt.spi.LiteralArgs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
@@ -12,8 +13,9 @@ import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 /**
  * 测试类
@@ -21,7 +23,8 @@ import java.util.Collections;
  * @author plexpt
  */
 public class StreamTest {
-    @EnableChatGPTClient(generalSupport = Support.class)
+    @EnableChatGPTClient(@LiteralArgs(completionPath = "https://.openai.azure.com/openai/deployments//chat/completions?api-version=2023-03-15-preview",
+            headerName = {"api-key", "Content-Type"}, headerValue = {"", MediaType.APPLICATION_JSON_VALUE}))
     public static class InnerConfig {
         @Bean
         public ObjectMapper getObjectMapper() {
@@ -34,7 +37,7 @@ public class StreamTest {
 
         @Override
         public String completionPath() {
-            return "https://api.openai.com/v1/chat/completions";
+            return "https://.openai.azure.com/openai/deployments//chat/completions?api-version=2023-03-15-preview";
         }
 
         @Override
@@ -45,26 +48,28 @@ public class StreamTest {
         @Override
         public HttpHeaders headers() {
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth("");
+            headers.set("api-key", "");
+            headers.setContentType(MediaType.APPLICATION_JSON);
             return headers;
         }
     }
 
-    private RestTemplateGPTClient chatGPTStream;
+    private ChatGPTClient chatGPTStream;
 
 
     @Before
     public void before() {
-        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(ChatGPTSupport.class, InnerConfig.class);
-        chatGPTStream = annotationConfigApplicationContext.getBean(RestTemplateGPTClient.class);
+        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(InnerConfig.class);
+        chatGPTStream = annotationConfigApplicationContext.getBean(ChatGPTClient.class);
     }
 
 
     @Test
     public void chatCompletions() throws JsonProcessingException {
+        ChatMessage system = ChatMessage.ofSystem("你现在是一个诗人，专门写七言绝句");
         ChatMessage chatMessage = ChatMessage.of("写首诗，题目是好热");
         ChatCompletion chatCompletion = new ChatCompletion()
-                .chatMessages(Collections.singletonList(chatMessage));
+                .chatMessages(Arrays.asList(system, chatMessage));
         System.out.println(new ObjectMapper().writeValueAsString(chatCompletion));
         chatGPTStream.streamChatCompletion(chatCompletion, new ConsoleListener(new ObjectMapper()));
 

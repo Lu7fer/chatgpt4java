@@ -47,10 +47,8 @@ public class RegistryChatGPT implements BeanFactoryPostProcessor {
             Class<? extends GeneralSupport> generalSupport = annotation.generalSupport();
             try {
                 Constructor<? extends GeneralSupport> constructor = generalSupport.getConstructor();
-                if (constructor.isAccessible()) {
-                    ChatGPTClient chatGPT = new RestTemplateGPTClient(constructor.newInstance(), restTemplate, objectMapper);
-                    beanFactory.registerSingleton("chatGPTClient", chatGPT);
-                }
+                ChatGPTClient chatGPT = new RestTemplateGPTClient(constructor.newInstance(), restTemplate, objectMapper);
+                beanFactory.registerSingleton("chatGPTClient", chatGPT);
             } catch (Throwable e) {
                 throw new RuntimeException("Instance class failed, is this class have a public no argument constructor.", e);
             }
