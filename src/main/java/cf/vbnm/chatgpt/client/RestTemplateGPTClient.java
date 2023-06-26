@@ -66,7 +66,7 @@ public class RestTemplateGPTClient implements ChatGPTClient {
         if (generalSupport == null) {
             int i = 0;
             if (headers.size() != 1) {
-                i = random.nextInt(headers.size());
+                i = random.nextInt(this.headers.size());
             }
             request.completionPath = completionPath.get(i);
             request.imagePath = imagePath.get(i);
